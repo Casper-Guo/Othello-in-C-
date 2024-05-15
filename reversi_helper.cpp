@@ -20,8 +20,6 @@ int sum_vector(vector<int> nums) {
 }
 
 void declare_score(const vector< vector<char> > board, bool endgame = false) {
-    // assume only called at end game
-
     int black_count = 0;
     int white_count = 0;
 
@@ -57,9 +55,54 @@ bool convert_input(const string input, int &row, int &col) {
         row = alphabet.find(input[0]);
         col = alphabet.find(input[1]);
         return true;
-    } else {
-        return false; 
     }
+
+    return false;
+}
+
+void print_board(const vector< vector<char> > board) {
+    declare_score(board);
+    cout << endl;
+
+    cout << "   ";
+    for (int i = 0; i < board.size(); i++) {
+        cout << alphabet[i] << " ";
+    }
+    cout << endl;
+
+    // print a line of dashes
+    cout << "  -";
+    for (int col = 0; col < board[0].size(); col++) {
+        cout << "--";
+    }
+    cout << endl;
+
+    for (int row = 0; row < board.size(); row++) {
+        cout << alphabet[row] << " |";
+
+        // print pieces on the board
+        // Black is O, White is X, blank is space
+        for (int col = 0; col < board[0].size(); col++) {
+            if (board[row][col] == 'U') {
+                cout << " ";
+            } else if (board[row][col] == 'B') {
+                cout << "O";
+            } else if (board[row][col] == 'W') {
+                cout << 'X';
+            }
+            // print a vertical separating line
+            cout << '|';
+        }
+        cout << endl;
+        cout << "  -";
+
+        // for each row of content, print a row of dashes
+        for (int col = 0; col < board[0].size(); col++) {
+            cout << "--";
+        }
+        cout << endl;
+    }
+    cout << endl;
 }
 
 vector< vector<char> > initialize_board(int &dim) {
@@ -88,11 +131,14 @@ vector< vector<char> > initialize_board(int &dim) {
     board[mid_low][mid_up] = 'B';
     board[mid_up][mid_low] = 'B';
 
-    string mods;
-    cout << "Additional Board Modifications (enter !!! when finished): " << endl;
+    print_board(board);
 
-    while (mods != "!!!") {
-        
+    string mods;
+    cout << "Additional Board Modifications " << endl;
+    cout << "Format: {Row}{Column}{W|B}" << endl;
+    cout << "Enter !!! when finished:" << endl;
+
+    while (true) {
         cin >> mods;
         if (mods == "!!!") {
             break;
@@ -102,7 +148,6 @@ vector< vector<char> > initialize_board(int &dim) {
             cout << "You can only change a grid to black (O) or white (X)." << endl;
             continue;
         } else {
-
             // check the coordinate we want to change is inbound
             if (alphabet.find(mods[0]) != string::npos && alphabet.find(mods[1]) != string::npos) {
                 int row = alphabet.find(mods[0]);
@@ -112,6 +157,8 @@ vector< vector<char> > initialize_board(int &dim) {
                 if (row < dim && col < dim) {
                     board[row][col] = mods[2];
                     cout << "Change implemented" << endl;
+                    print_board(board);
+                    cout << "Continue entering modifications, or !!! when done:" << endl;
                 } else {
                     cout << "Please enter a inbound coordinate" << endl;
                 }   
@@ -125,67 +172,15 @@ vector< vector<char> > initialize_board(int &dim) {
     return board; 
 }
 
-void print_board(const vector< vector<char> > board) {
-    // print current score
-    declare_score(board);
-    cout << endl;
-
-    // print row indices
-    cout << "   ";
-    for (int i = 0; i < board.size(); i++) {
-        cout << alphabet[i] << " ";
-    }
-    cout << endl;
-
-    // print a line of dashes
-    cout << "  -";
-    for (int col = 0; col < board[0].size(); col++) {
-        cout << "--";
-    }
-    cout << endl;
-
-    for (int row = 0; row < board.size(); row++) {
-        // print col indices
-        cout << alphabet[row] << " |";
-
-        // print pieces on the board
-        // Black is O, White is X, blank is space
-        for (int col = 0; col < board[0].size(); col++) {
-            if (board[row][col] == 'U') {
-                cout << " ";
-            } else if (board[row][col] == 'B') {
-                cout << "O";
-            } else if (board[row][col] == 'W') {
-                cout << 'X';
-            }
-            // print a vertical separating line
-            cout << '|';
-        }
-        cout << endl;
-        cout << "  -";
-
-        // for each row of content, print a row of dashes
-        for (int col = 0; col < board[0].size(); col++) {
-            cout << "--";
-        }
-        cout << endl;
-    }
-    cout << endl;
-}
-
 bool check_inbound(int row, int col, int dim) {
     // can assume dim exists
     // check inbound
-
     if (row < 0 || row >= dim) {
-        // cout << "Vertical position out of bound!" << endl;
         return false;
     } else if (col < 0 || col >= dim) {
-        // cout << "Horizontal position out of bound!" << endl;
         return false;
-    } else {
-        return true;
     }
+    return true;
 }
 
 bool check_direction(const vector< vector<char> > board, int row, int col, int del_row, int del_col, char color, int dim, int &counter) {
@@ -221,18 +216,18 @@ bool check_direction(const vector< vector<char> > board, int row, int col, int d
         }
     }
 
-    // move to the coordinate after the neighbor
-    row_now += del_row;
-    col_now += del_col;
-
-    // at least one move possible here
-    counter = 1;
-
     if (continue_check) {
+        // move to the coordinate after the neighbor
+        row_now += del_row;
+        col_now += del_col;
+
+        // at least one move possible here
+        counter = 1;
+
         while (check_inbound(row_now, col_now, dim)) {
             if (board[row_now][col_now] == 'U') {
                 // if there is a blank in the direction, direction is invalid
-                return false;;
+                return false;
             } else if (board[row_now][col_now] == color) {
                 // if there is piece of the same color, direction is valid
                 return true;
@@ -244,12 +239,12 @@ bool check_direction(const vector< vector<char> > board, int row, int col, int d
         }
     }
 
-    return false; 
+    return false;
 }
 
 bool check_valid(const vector< vector<char> > board, int row, int col, char color, int dim, vector<int> &num_flips) {
 
-    if (!(check_inbound(row, col, dim))) {
+    if (!check_inbound(row, col, dim)) {
         return false;
     } 
 
@@ -299,11 +294,8 @@ bool check_valid(const vector< vector<char> > board, int row, int col, char colo
 
 void valid_exist(const vector< vector<char> > board, int dim, vector<int> &B_valid, vector<int> &W_valid) {
     // print valid_moves for both W and B
-
     B_valid.clear();
     W_valid.clear();
-
-    // record all valid moves for both B and W
 
     for (int row = 0; row < dim; row++) {
         for (int col = 0; col < dim; col++) {
@@ -318,8 +310,6 @@ void valid_exist(const vector< vector<char> > board, int dim, vector<int> &B_val
             }
         }
     }
-
-    // iterate through the valid moves and print
 
     cout << "Available moves for O: " << endl;
     for (int i = 0; i < B_valid.size()/2; i++) {
@@ -338,9 +328,9 @@ bool check_endgame(const vector<int> B_valid, const vector<int> W_valid) {
     // the game ends when both vectors are empty, aka no viable move for either player
 
     if (W_valid.size() == 0 && B_valid.size() == 0) {
-        return false;
+        return true;
     }
-    return true;
+    return false;
 }
 
 void place_piece(vector< vector<char> > &board, int row, int col, char color) {
@@ -382,7 +372,7 @@ void flip_pieces(vector< vector<char> > &board, int row, int col, char color, ve
 
 void select_optimal(vector< vector<char> > board, int &row, int &col, int dim, vector<int> num_flips, char color = 'W') {
 
-    // can assume there is at least one optimal move when this function is called
+    // can assume there is at least one available move when this function is called
 
     int max_flip = 0;
     int max_row = 0;
